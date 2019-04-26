@@ -1,0 +1,7 @@
+comandos docker
+
+
+docker container run -it debian bash -> abrirá terminal bash do debian
+docker container run --name mydeb -it bash -> nomea um container
+docker container start -ai mydeb -> start do container nomeado -mantendo arquivos criados dentro do container
+docker container ls - lista os containers que estão up
