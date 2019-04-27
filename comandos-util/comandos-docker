@@ -5,3 +5,43 @@ docker container run -it debian bash -> abrirá terminal bash do debian
 docker container run --name mydeb -it bash -> nomea um container
 docker container start -ai mydeb -> start do container nomeado -mantendo arquivos criados dentro do container
 docker container ls - lista os containers que estão up
+docker container run -p 8080:80 nginx -> para rodar o serviço do nginx e expor a porta 8080 externo e interno por padrão o nginx é 80
+
+docker container run -p 8080:80 -v $(pwd)/html:/usr/share/nginx/html nginx -> mapea um volume do container para o mundo exterior onde a pasta /usr/share/nginx/html do container passa a aponta para minha maquina host
+
+docker container run -d --name ex-daemon-basic -p 8080:80 -v $(pwd)/html:/usr/share/nginx/html nginx -> para roda o container em background -d  
+
+docker container stop -> para parar o container
+docker container start "nome-container" -> para startar o container
+docker container restart "nome-container" -> para restartar o container
+
+**********************************************************************
+
+Manipulando container em modo daemon
+
+docker container logs "nome-container" -> verifica os logs do container
+
+docker container inspect "nome-container" -> verifica a estrutura do container em que tipo de imagem é baseado, estrutura de pasta de log etc.
+
+***********************************************************************
+
+docker container exec ex-daemon-basic uname -or -> para verificar em qual sistema esta rodando o container
+
+____________________conceitos__________________________________________
+
+o que são imagens e o que são container 
+
+uma associação o orientação a objeto seria como imagens são classes e o container o objeto primiamente dito
+
+_______________________________________________________________________
+
+
+docker container --help -> lista commandos que podem ser utilizados para gerenciar um container
+
+docker image --help -> lista commandos que podem ser utilizados para gerenciar uma image
+
+docker volume --help -> lista commandos que podem ser utilizados para gerenciar um valume
+
+
+
+
