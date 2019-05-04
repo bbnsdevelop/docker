@@ -44,4 +44,45 @@ docker volume --help -> lista commandos que podem ser utilizados para gerenciar 
 
 
 
+docker image tag redis:latest cod3r-redis -> cria uma nova tag da imagem redis, como se fosse um clone
+
+docker image rm "nome_image" para excluir uma imagem
+
+
++++++++++++++++++++++++++++++gerenciamento de imagem ++++++++++++++++++++
+
+
+
+docker image pull -> baixar uma imagem do dockergit
+docker image ls -> listar imagens
+docker image rm "nome da imagem" -> remove as imagem
+docker image inspect -> verificar informações da imagem
+docker image tag -> faz uma copia da imagem que vc quer
+docker image build -> 
+docker image push -> envia para o repositório registry do docker
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+docker image build -t ex-simple-build .   -> para construir um build -t para dar o nome a tag que quer
+docker image build -t ex-build-arg .
+docker image build --build-arg S3_BUCKET=myapp -t ex-build-arg .     -> modando o argumento da variavel do Dockerfile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
