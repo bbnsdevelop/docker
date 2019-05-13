@@ -67,6 +67,11 @@ docker image push -> envia para o repositório registry do docker
 docker image build -t ex-simple-build .   -> para construir um build -t para dar o nome a tag que quer
 docker image build -t ex-build-arg .
 docker image build --build-arg S3_BUCKET=myapp -t ex-build-arg .     -> modando o argumento da variavel do Dockerfile
+docker image build -t ex-build-copy .   -> para copiar um arquivo host e enviar para uma imagem
+
+docker container run -it -v $(pwd):/app -p 80:8000 --name python-server ex-build-dev   -> rodar um servidor python mapeando a porta 80 como saída
+
+docker container run -it --volumes-from=docker container run -it -v $(pwd):/app -p 80:8000 --name python-server ex-build-dev
 
 
 
