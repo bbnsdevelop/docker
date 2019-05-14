@@ -71,8 +71,15 @@ docker image build -t ex-build-copy .   -> para copiar um arquivo host e enviar 
 
 docker container run -it -v $(pwd):/app -p 80:8000 --name python-server ex-build-dev   -> rodar um servidor python mapeando a porta 80 como saída
 
-docker container run -it --volumes-from=docker container run -it -v $(pwd):/app -p 80:8000 --name python-server ex-build-dev
+docker container run -it --volumes-from=python-server debian cat /log/http-server.log   -> para verificar o log do outro container, devido ao compartilhamento de volume
 
+
+docker login --username=bbnsdevelop --> para configurar o usuário
+
+docker image tag ex-simple-build bbnsdevelop/simple-build:1.0  ---> fazendo uma nova tag para push
+
+
+docker image push bbnsdevelop/simple-build:1.0  --> enviando a imagem para o dockerhub
 
 
 
