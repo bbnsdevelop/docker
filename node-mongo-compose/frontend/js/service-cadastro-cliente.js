@@ -54,6 +54,7 @@ const API = 'http://localhost:3000'
                 })
             }
 
+            
             $(() => {
                 getClients()
                 $('[save]').click(saveClient)
