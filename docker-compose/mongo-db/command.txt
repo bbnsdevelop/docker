@@ -1,0 +1,4 @@
+docker exec -it mongo-db_mongo_1 bash
+
+in container use: mongosh 
+    to access a database
