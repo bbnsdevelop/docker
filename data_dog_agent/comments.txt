@@ -1,0 +1,16 @@
+
+Steps to Use the File:
+
+Save the YAML file as datadog-agent.yml or any name you prefer.
+Replace <YOUR_DATADOG_API_KEY> with your Datadog API key. You can get it from your Datadog account settings.
+
+
+Run the Datadog Agent container using Docker Compose local:
+docker-compose -f datadog-agent.yml up -d
+
+Key Features in the Configuration:
+Docker Monitoring: The Datadog Agent monitors Docker containers through the mounted Docker socket.
+Log Collection: The DD_LOGS_ENABLED and DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL settings enable automatic log collection from all containers.
+APM and DogStatsD: Ports 8126 and 8125 are exposed for trace and custom metric collection.
+Container Exclusion: The Agent excludes itself (name:datadog-agent) to avoid collecting its own metrics.
+Feel free to customize the file further to meet your specific needs, such as adding specific integrations or configuring tags. Let me know if you need help with additional customization!

@@ -1,0 +1,24 @@
+version: '3.3'
+
+services:
+  datadog-agent:
+    container_name: dd-agent
+    image: gcr.io/datadoghq/agent:7
+    environment:
+      # Replace with your Datadog API key
+      - DD_API_KEY=ab87359a12ad7e573b0b3fa9dc7d3149
+      # Change to datadoghq.eu if using EU region
+      - DD_SITE=us5.datadoghq.com
+      # Enable log collection
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true  # Collect logs from all containers
+      - DD_HEALTH_PORT=5555               # Enable health check endpoint
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Required for Docker monitoring
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    ports:
+      - "8126:8126"   # APM Traces
+      - "5555:5555"   # Health Check
+    restart: always
