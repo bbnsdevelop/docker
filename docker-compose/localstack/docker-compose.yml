@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    restart: always
+
+    ports:
+      - "4566:4566"           # Gateway for all LocalStack services
+      - "4510-4559:4510-4559" # Optional: Range for individual services
+
+    environment:
+      # === AWS Credentials (mock values for LocalStack) ===
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+
+      # === LocalStack Core Configuration ===
+      DEBUG: 1
+      DATA_DIR: /var/lib/localstack              # All data persistence (Pro only)
+      DOCKER_HOST: unix:///var/run/docker.sock
+      LOCALSTACK_HOST: localstack
+      HOSTNAME_EXTERNAL: localhost
+
+      # === Enable All Core AWS Services ===
+      SERVICES: >
+        apigateway,cloudformation,cloudwatch,config,dynamodb,ec2,es,firehose,
+        iam,kinesis,kms,lambda,logs,redshift,route53,s3,secretsmanager,ses,
+        sns,sqs,ssm,stepfunctions,sts,textract,transcribe
+
+      # === LocalStack Cloud (optional for persistence) ===
+      LOCALSTACK_AUTH_TOKEN: "${LOCALSTACK_AUTH_TOKEN:-}"
+
+    volumes:
+      # Generic persistent volume (used for all LocalStack data)
+      - localstack_data:/var/lib/localstack
+
+      # Allow LocalStack to spin up Lambdas inside Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # Optional: auto-init scripts directory for reproducibility
+      - ./init-scripts:/etc/localstack/init/ready.d
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  localstack_data:   # <--- This defines a reusable named volume
