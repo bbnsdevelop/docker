@@ -1,0 +1,420 @@
+# create Cluster by kind
+on the same path config.yaml follow command below
+kind create cluster --config config.yaml --name community-devops --kubeconfig config
+
+
+#verify kubectl
+kubectl get pod -A --kubeconfig config
+
+#vagrant
+Need config Vagrantfile
+On the same path follow command below
+vagrant up
+
+if has networks error verify /etc/vbox/
+cat /etc/vbox/networks.conf
+* 0.0.0.0/0 ::/0
+
+
+# to remove 
+vagrant destroy -f
+rm -rf .vagrant
+
+#generate ssh key
+ssh-keygen -t rsa -b 4096 -C "vagrant"
+
+# enable ipv4
+https://kubernetes.io/docs/setup/production-environment/container-runtimes/
+
+
+verify if ip_v4 was enabled read dock above to know why needs this configuration
+
+ sysctl -a | grep ip_forward
+net.ipv4.ip_forward = 1   <----------- this evidence 
+net.ipv4.ip_forward_update_priority = 1
+net.ipv4.ip_forward_use_pmtu = 0
+
+
+# systemd usually use containerd because of it we need to install containerd.io
+https://docs.docker.com/engine/install/ubuntu/
+install Step 1 - Set up Docker's apt repository.
+
+than follow
+We don't need install docker, containerd is enough to run what we need 
+apt install containerd.io 
+
+
+this has initial config on it
+root@master-1:/etc/containerd# ls
+config.toml
+
+we need to add more | only this command containerd config default show what config default, bellow we redirect output to config.toml
+
+containerd config default > /etc/containerd/config.toml
+
+
+
+
+# install kubeadm
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+if has swap we need disable it, how to verify?
+cat /proc/swaps ---> show empty is disable
+if returns typing 
+swapoff
+
+
+than follow
+Note:
+There's a dedicated package repository for each Kubernetes minor version. If you want to install a minor version other than v1.35, please see the installation guide for your desired minor version.
+Debian-based distributions
+
+
+notes after run this command 
+dpkg -l | grep kube
+ii  kubeadm                          1.35.2-1.1                              amd64        Command-line utility for administering a Kubernetes cluster
+ii  kubectl                          1.35.2-1.1                              amd64        Command-line utility for interacting with a Kubernetes cluster
+ii  kubelet                          1.35.2-1.1                              amd64        Node agent for Kubernetes clusters
+ii  kubernetes-cni                   1.8.0-1.1                               amd64        Binaries required to provision kubernetes container networking
+
+starts with ii it's means every time when update our system it will update kubeadm, we wont it. We want update only when is necessary. For it we need this command bellow
+sudo apt-mark hold kubelet kubeadm kubectl
+
+
+# Now we will create a cluster with kubeadm on ours VM's vagrant 
+https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
+
+this configuration is only on master
+as we config on Vagrantfile our network now we will use it when create our cluster 
+
+cidr we need specify ip as on doc: https://github.com/flannel-io/flannel?tab=readme-ov-file
+
+kubeadm init --apiserver-advertise-address 172.89.0.11 --pod-network-cidr 10.244.0.0/16
+[init] Using Kubernetes version: v1.35.2
+[preflight] Running pre-flight checks
+[preflight] Pulling images required for setting up a Kubernetes cluster
+[preflight] This might take a minute or two, depending on the speed of your internet connection
+[preflight] You can also perform this action beforehand using 'kubeadm config images pull'
+[certs] Using certificateDir folder "/etc/kubernetes/pki"
+[certs] Generating "ca" certificate and key
+[certs] Generating "apiserver" certificate and key
+[certs] apiserver serving cert is signed for DNS names [kubernetes kubernetes.default kubernetes.default.svc kubernetes.default.svc.cluster.local master-1] and IPs [10.96.0.1 172.89.0.11]
+[certs] Generating "apiserver-kubelet-client" certificate and key
+[certs] Generating "front-proxy-ca" certificate and key
+[certs] Generating "front-proxy-client" certificate and key
+[certs] Generating "etcd/ca" certificate and key
+[certs] Generating "etcd/server" certificate and key
+[certs] etcd/server serving cert is signed for DNS names [localhost master-1] and IPs [172.89.0.11 127.0.0.1 ::1]
+[certs] Generating "etcd/peer" certificate and key
+[certs] etcd/peer serving cert is signed for DNS names [localhost master-1] and IPs [172.89.0.11 127.0.0.1 ::1]
+[certs] Generating "etcd/healthcheck-client" certificate and key
+[certs] Generating "apiserver-etcd-client" certificate and key
+[certs] Generating "sa" key and public key
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "super-admin.conf" kubeconfig file
+[kubeconfig] Writing "kubelet.conf" kubeconfig file
+[kubeconfig] Writing "controller-manager.conf" kubeconfig file
+[kubeconfig] Writing "scheduler.conf" kubeconfig file
+[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+[control-plane] Using manifest folder "/etc/kubernetes/manifests"
+[control-plane] Creating static Pod manifest for "kube-apiserver"
+[control-plane] Creating static Pod manifest for "kube-controller-manager"
+[control-plane] Creating static Pod manifest for "kube-scheduler"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/instance-config.yaml"
+[patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Starting the kubelet
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests"
+[kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
+[kubelet-check] The kubelet is healthy after 1.002108444s
+[control-plane-check] Waiting for healthy control plane components. This can take up to 4m0s
+[control-plane-check] Checking kube-apiserver at https://172.89.0.11:6443/livez
+[control-plane-check] Checking kube-controller-manager at https://127.0.0.1:10257/healthz
+[control-plane-check] Checking kube-scheduler at https://127.0.0.1:10259/livez
+[control-plane-check] kube-controller-manager is healthy after 1.507280715s
+[control-plane-check] kube-scheduler is healthy after 2.02255239s
+[control-plane-check] kube-apiserver is healthy after 9.004179538s
+[upload-config] Storing the configuration used in ConfigMap "kubeadm-config" in the "kube-system" Namespace
+[kubelet] Creating a ConfigMap "kubelet-config" in namespace kube-system with the configuration for the kubelets in the cluster
+[upload-certs] Skipping phase. Please see --upload-certs
+[mark-control-plane] Marking the node master-1 as control-plane by adding the labels: [node-role.kubernetes.io/control-plane node.kubernetes.io/exclude-from-external-load-balancers]
+[mark-control-plane] Marking the node master-1 as control-plane by adding the taints [node-role.kubernetes.io/control-plane:NoSchedule]
+[bootstrap-token] Using token: ib77m9.tbbdddm4rispq47u
+[bootstrap-token] Configuring bootstrap tokens, cluster-info ConfigMap, RBAC Roles
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to get nodes
+[bootstrap-token] Configured RBAC rules to allow Node Bootstrap tokens to post CSRs in order for nodes to get long term certificate credentials
+[bootstrap-token] Configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Node Bootstrap Token
+[bootstrap-token] Configured RBAC rules to allow certificate rotation for all node client certificates in the cluster
+[bootstrap-token] Creating the "cluster-info" ConfigMap in the "kube-public" namespace
+[kubelet-finalize] Updating "/etc/kubernetes/kubelet.conf" to point to a rotatable kubelet client certificate and key
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 172.89.0.11:6443 --token ib77m9.tbbdddm4rispq47u \
+        --discovery-token-ca-cert-hash sha256:00fa5a43483e3efe16e9c0cbe1c493700c586d0bc92131a08c93c66f905850da 
+
+
+
+root@master-1:/etc/containerd# 
+
+
+than update vim /etc/containerd/config.toml to SystemdCgroup = true
+
+restart containerd 
+
+finally kubeadm reset 
+
+
+or we con config by yaml devops-enginieer/kubeadm-config.yml
+
+kubeadm init --config kubeadm-config.yaml
+
+in the end update admin.conf
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+
+
+#nodes does't have networks 
+kubectl get pods -A -o wide
+NAMESPACE     NAME                               READY   STATUS    RESTARTS      AGE   IP          NODE       NOMINATED NODE   READINESS GATES
+kube-system   coredns-7d764666f9-hx2b4           0/1     Pending   0             23h   <none>      <none>     <none>           <none>
+kube-system   coredns-7d764666f9-qd8l9           0/1     Pending   0             23h   <none>      <none>     <none>           <none>
+kube-system   etcd-master-1                      1/1     Running   2 (22m ago)   23h   10.0.2.15   master-1   <none>           <none>
+kube-system   kube-apiserver-master-1            1/1     Running   2 (22m ago)   23h   10.0.2.15   master-1   <none>           <none>
+kube-system   kube-controller-manager-master-1   1/1     Running   2 (22m ago)   23h   10.0.2.15   master-1   <none>           <none>
+kube-system   kube-proxy-d47s6                   1/1     Running   1 (22m ago)   23h   10.0.2.15   master-1   <none>           <none>
+kube-system   kube-scheduler-master-1            1/1     Running   2 (22m ago)   23h   10.0.2.15   master-1   <none>           <none>
+
+
+now we will use flannel 
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+
+kubectl get pods -n kube-flannel
+NAME                    READY   STATUS   RESTARTS      AGE
+kube-flannel-ds-bhb6j   0/1     Error    2 (30s ago)   47s
+
+
+but still have problem, how to fix it?
+
+kubectl logs -n kube-flannel kube-flannel-ds-bhh6j
+error: error from server (NotFound): pods "kube-flannel-ds-bhh6j" not found in namespace "kube-flannel"
+root@master-1:/home/vagrant# kubectl logs -n kube-flannel kube-flannel-ds-bhb6j
+Defaulted container "kube-flannel" out of: kube-flannel, install-cni-plugin (init), install-cni (init)
+I0311 01:39:23.197820       1 main.go:215] CLI flags config: {etcdEndpoints:http://127.0.0.1:4001,http://127.0.0.1:2379 etcdPrefix:/coreos.com/network etcdKeyfile: etcdCertfile: etcdCAFile: etcdUsername: etcdPassword: version:false kubeSubnetMgr:true kubeApiUrl: kubeAnnotationPrefix:flannel.alpha.coreos.com kubeConfigFile: iface:[] ifaceRegex:[] ipMasq:true ipMasqRandomFullyDisable:false ifaceCanReach: subnetFile:/run/flannel/subnet.env publicIP: publicIPv6: subnetLeaseRenewMargin:60 healthzIP:0.0.0.0 healthzPort:0 iptablesResyncSeconds:5 iptablesForwardRules:true blackholeRoute:false netConfPath:/etc/kube-flannel/net-conf.json setNodeNetworkUnavailable:true}
+W0311 01:39:23.198135       1 client_config.go:667] Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.
+I0311 01:39:23.228560       1 kube.go:139] Waiting 10m0s for node controller to sync
+I0311 01:39:23.229082       1 kube.go:537] Starting kube subnet manager
+I0311 01:39:24.229772       1 kube.go:163] Node controller sync successful
+I0311 01:39:24.230558       1 main.go:241] Created subnet manager: Kubernetes Subnet Manager - master-1
+I0311 01:39:24.230594       1 main.go:244] Installing signal handlers
+I0311 01:39:24.231567       1 main.go:523] Found network config - Backend type: vxlan
+E0311 01:39:24.231971       1 main.go:278] Failed to check br_netfilter: stat /proc/sys/net/bridge/bridge-nf-call-iptables: no such file or directory
+
+
+enable kernel module 
+modprobe br_netfilter
+
+than delete pod kube-flannel and will auto create new pod again
+ get pods -n kube-flannel
+NAME                    READY   STATUS    RESTARTS   AGE
+kube-flannel-ds-zvrkj   1/1     Running   0          51s
+
+
+but every time when restart machine this module does't load and will failure, to fix it we need load this module on boot computer
+echo "br_netfilter" >> /etc/modules-load.d/modules.conf
+
+
+how to check if this module was loaded?
+lsmod | grep br_
+br_netfilter           32768  0
+bridge                311296  1 br_netfilter
+
+
+but if we check our nodes we only have master, how to connect to others?
+kubectl get node
+NAME       STATUS   ROLES           AGE   VERSION
+master-1   Ready    control-plane   24h   v1.35.2
+
+
+execute command pass token >>>>>> If you forgot get it when Configured kubeadm init, follow it
+
+kubeadm token create --print-join-command
+show it
+kubeadm join 172.89.0.11:6443 --token o9xapl.vss91e5f9gl10x0y --discovery-token-ca-cert-hash sha256:8cab5ddc4e26b8afc41a4ac9a8e7f8014d3722294da18943fd2c1054476b21c0
+
+
+
+on machine 1
+
+root@worker-1:/home/vagrant# kubeadm join 172.89.0.11:6443 --token o9xapl.vss91e5f9gl10x0y --discovery-token-ca-cert-hash sha256:8cab5ddc4e26b8afc41a4ac9a8e7f8014d3722294da18943fd2c1054476b21c0
+[preflight] Running pre-flight checks
+[preflight] Reading configuration from the "kubeadm-config" ConfigMap in namespace "kube-system"...
+[preflight] Use 'kubeadm init phase upload-config kubeadm --config your-config-file' to re-upload it.
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/instance-config.yaml"
+[patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
+[kubelet-check] The kubelet is healthy after 593.014559ms
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+
+on machine 2
+
+root@worker-2:/home/vagrant# kubeadm join 172.89.0.11:6443 --token zo9jia.oivcngvef4bourkd --discovery-token-ca-cert-hash sha256:8cab5ddc4e26b8afc41a4ac9a8e7f8014d3722294da18943fd2c1054476b21c0
+[preflight] Running pre-flight checks
+[preflight] Reading configuration from the "kubeadm-config" ConfigMap in namespace "kube-system"...
+[preflight] Use 'kubeadm init phase upload-config kubeadm --config your-config-file' to re-upload it.
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/instance-config.yaml"
+[patches] Applied patch of type "application/strategic-merge-patch+json" to target "kubeletconfiguration"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Starting the kubelet
+[kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
+[kubelet-check] The kubelet is healthy after 532.555249ms
+[kubelet-start] Waiting for the kubelet to perform the TLS Bootstrap
+
+This node has joined the cluster:
+* Certificate signing request was sent to apiserver and a response was received.
+* The Kubelet was informed of the new secure connection details.
+
+Run 'kubectl get nodes' on the control-plane to see this node join the cluster.
+
+
+
+MASTER now get nodes
+
+root@master-1:/home/vagrant# kubectl get node
+NAME       STATUS     ROLES           AGE   VERSION
+master-1   Ready      control-plane   24h   v1.35.2
+worker-1   Ready      <none>          39s   v1.35.2
+worker-2   NotReady   <none>          5s    v1.35.2
+
+
+kubectl get pods -A
+NAMESPACE      NAME                               READY   STATUS    RESTARTS      AGE
+kube-flannel   kube-flannel-ds-9kszl              1/1     Running   0             2m31s
+kube-flannel   kube-flannel-ds-h92jj              1/1     Running   0             3m5s
+kube-flannel   kube-flannel-ds-zvrkj              1/1     Running   0             17m
+
+Finish config our cluster 
+
+So we can use the option automation-vagrant-kubeadm there is scripts that autometed all process we did manually above
+
+but when finish process to creater still execute manually 
+in the end update admin.conf
+export KUBECONFIG=/etc/kubernetes/admin.conf
+only on master-1
+
+
+
+#cluster high availability on-premise
+High-availability (HA) on-premise servers ensure continuous service, often targeting 99.99% or higher uptime, 
+by eliminating single points of failure through redundancy. Key strategies include clustering, active-passive failover, 
+load balancing, and data replication across multiple hosts to handle hardware or software failures seamlessly. 
+
+Key Components and Strategies
+Clustering & Failover: A primary server handles operations, with a standby server automatically taking over during downtime.
+Redundancy: Duplicate hardware, networking, and power sources are critical to prevent localized failures from causing outages.
+Data Replication: Periodic or real-time replication ensures data consistency between primary and standby servers.
+Load Balancing: Distributes traffic across multiple servers, common in Remote Desktop Services (RDS).
+Virtualization: Using virtual machines (VMs) facilitates faster recovery and resource reallocation. 
+
+Implementation Best Practices
+Planning: Define required uptime (SLAs), Recovery Time Objectives (RTO), and Recovery Point Objectives (RPO).
+Architecture: Implement multiple nodes/servers to ensure that if one fails, others in the cluster continue to function.
+Monitoring: Use tools to detect failures immediately and trigger automated failover processes.
+Scope: Ensure redundancy covers not just servers, but networking, storage, and application layers
+
+look images on static/img
+
+
+#Terraform create cluster
+
+Step 1 — Update the system
+
+First update Ubuntu packages.
+
+sudo apt update
+sudo apt upgrade -y
+Step 2 — Install required dependencies
+
+Install tools required to add external repositories.
+
+sudo apt install -y gnupg software-properties-common curl
+Step 3 — Add the HashiCorp GPG key
+
+This key verifies Terraform packages.
+
+wget -O- https://apt.releases.hashicorp.com/gpg \
+| sudo gpg --dearmor \
+-o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+This downloads the signing key used by HashiCorp packages.
+
+Step 4 — Add the HashiCorp repository
+echo "deb [arch=$(dpkg --print-architecture) \
+signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+https://apt.releases.hashicorp.com \
+$(lsb_release -cs) main" \
+| sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+This tells Ubuntu where to download Terraform packages.
+
+Step 5 — Update apt again
+sudo apt update
+
+This loads the new repository.
+
+Step 6 — Install Terraform
+sudo apt install terraform -y
+
+Ubuntu will download and install Terraform.
+
+Step 7 — Verify the installation
+
+Check the installed version:
+
+terraform -version
+
+Example output:
+
+Terraform v1.14.5
+on linux_amd64
+
+This confirms Terraform is installed successfully.
+
+Step 8 — (Optional) Enable autocomplete
+
+Enable CLI autocomplete:
+
+terraform -install-autocomplete
+
+Restart the shell afterward.
